@@ -1,0 +1,57 @@
+set term pngcairo dashed size 1024,768
+set output 'chart.png'
+set style fill solid
+set xrange [0:45]
+set yrange [0:7]
+unset ytics
+set title 'Planificacion'
+set ytics('a.txt' 1,'b.txt' 2,'c.txt' 3,'d.txt' 4,'e.txt' 5,'f.txt' 6)
+set xtics 5
+unset key
+set xlabel 'Tiempo'
+set ylabel 'Proceso'
+set style line 1 lt 1 lw 2 lc rgb '#00ff00'
+set style line 2 lt 1 lw 2 lc rgb '#ff0000'
+set style line 3 lt 1 lw 1 lc rgb '#202020'
+set style arrow 1 heads size screen 0.008,90 ls 1
+set style arrow 2 heads size screen 0.008,90 ls 2
+set style arrow 3 heads size screen 0.008,100 ls 3
+set arrow 1 from 0,1 to 5,1 as 1
+set arrow 2 from 0,2 to 5,2 as 3
+set arrow 3 from 0,3 to 5,3 as 3
+set arrow 4 from 0,4 to 5,4 as 3
+set arrow 5 from 0,5 to 5,5 as 3
+set arrow 6 from 0,6 to 5,6 as 3
+set arrow 7 from 5,1 to 7,1 as 1
+set arrow 8 from 5,2 to 7,2 as 3
+set arrow 9 from 5,3 to 7,3 as 3
+set arrow 10 from 5,4 to 7,4 as 3
+set arrow 11 from 5,5 to 7,5 as 3
+set arrow 12 from 5,6 to 7,6 as 3
+set arrow 13 from 7,2 to 10,2 as 1
+set arrow 14 from 7,3 to 10,3 as 3
+set arrow 15 from 7,4 to 10,4 as 3
+set arrow 16 from 7,5 to 10,5 as 3
+set arrow 17 from 7,6 to 10,6 as 3
+set arrow 18 from 10,3 to 15,3 as 1
+set arrow 19 from 10,4 to 15,4 as 3
+set arrow 20 from 10,5 to 15,5 as 3
+set arrow 21 from 10,6 to 15,6 as 3
+set arrow 22 from 15,3 to 20,3 as 1
+set arrow 23 from 15,4 to 20,4 as 3
+set arrow 24 from 15,5 to 20,5 as 3
+set arrow 25 from 15,6 to 20,6 as 3
+set arrow 26 from 20,3 to 23,3 as 1
+set arrow 27 from 20,4 to 23,4 as 3
+set arrow 28 from 20,5 to 23,5 as 3
+set arrow 29 from 20,6 to 23,6 as 3
+set arrow 30 from 23,4 to 28,4 as 1
+set arrow 31 from 23,5 to 28,5 as 3
+set arrow 32 from 23,6 to 28,6 as 3
+set arrow 33 from 28,4 to 31,4 as 1
+set arrow 34 from 28,5 to 31,5 as 3
+set arrow 35 from 28,6 to 31,6 as 3
+set arrow 36 from 31,5 to 36,5 as 1
+set arrow 37 from 31,6 to 36,6 as 3
+set arrow 38 from 36,6 to 40,6 as 1
+plot NaN

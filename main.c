@@ -1,24 +1,24 @@
 /*
- Simulador de planificacion de CPU para un solo procesador.
- Derechos Reservados de Erwin Meza Vega <emezav@gmail.com>.
- 
- Presentado por: 
- 
-Nombre: David Jiménez Garzón, Código: 104618021308, Correo: djimenezg@unicauca.edu.co
- 
- IMPORTANTE
- Este código se proporciona como una guía general para implementar
- el simulador de planificación. El estudiante deberá verificar su 
- funcionamiento y adaptarlo a las necesidades del problema a solucionar.
- 
- El profesor no se hace responsable por las omisiones, los errores o las 
- imprecisiones que se puedan encontrar en este código y los archivos relacionados.
- 
- USO:
- 
- ./nombre_ejecutable archivo_configuracion
- ./nombre_ejecutable < archivo_configuracion
- 
+    Simulador de planificacion de CPU para un solo procesador.
+    Derechos Reservados de Erwin Meza Vega <emezav@gmail.com>.
+
+    Presentado por: 
+
+    Nombre: David Jiménez Garzón, Código: 104618021308, Correo: djimenezg@unicauca.edu.co
+
+    IMPORTANTE
+    Este código se proporciona como una guía general para implementar
+    el simulador de planificación. El estudiante deberá verificar su 
+    funcionamiento y adaptarlo a las necesidades del problema a solucionar.
+
+    El profesor no se hace responsable por las omisiones, los errores o las 
+    imprecisiones que se puedan encontrar en este código y los archivos relacionados.
+
+    USO:
+
+    ./nombre_ejecutable archivo_configuracion
+    ./nombre_ejecutable < archivo_configuracion
+
 */
 
 #include <stdio.h>
@@ -734,12 +734,8 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
 
     print_queue(&queues[0]);
 
-    // ##############################################################################
-
-    // ##############################################################################
-
     /*
-     while (nprocesses > 0) {    
+     while (nprocesses > 0) { 
         // TODO: Implementar la planificaci�n
          
         //Cuando un proceso termina, decrementar nprocesses.
