@@ -1,25 +1,25 @@
 /*
  Simulador de planificacion de CPU para un solo procesador.
  Derechos Reservados de Erwin Meza Vega <emezav@gmail.com>.
- 
- Presentado por: 
- 
+
+ Presentado por:
+
  estudiante1 codigo correo
- estudiante1 codigo correo 
- 
+ estudiante1 codigo correo
+
  IMPORTANTE
  Este código se proporciona como una guía general para implementar
- el simulador de planificación. El estudiante deberá verificar su 
+ el simulador de planificación. El estudiante deberá verificar su
  funcionamiento y adaptarlo a las necesidades del problema a solucionar.
- 
- El profesor no se hace responsable por las omisiones, los errores o las 
+
+ El profesor no se hace responsable por las omisiones, los errores o las
  imprecisiones que se puedan encontrar en este código y los archivos relacionados.
- 
+
  USO:
- 
+
  ./nombre_ejecutable archivo_configuracion
  ./nombre_ejecutable < archivo_configuracion
- 
+
 */
 
 #include <stdio.h>
@@ -104,7 +104,7 @@ typedef struct
 
 /** @brief Crea una nueva lista de colas de prioridad
  * @param int Cantidad de colas de prioridad
-*/
+ */
 priority_queue *create_queues(int);
 
 /** @brief Imprime la informacion de una cola de prioridad */
@@ -113,10 +113,10 @@ void print_queue(priority_queue *);
 /** @brief Retorna el numero de procesos listos en una cola de prioridad
  * @param priority_queue * Apuntador a la lista de colas de prioridad
  * @param int Numero total de colas de prioridad
-*/
+ */
 int get_ready_count(priority_queue *, int);
 
-/*@brief Retorna el tiempo en el cual se presenta la nueva llegada a la cola 
+/*@brief Retorna el tiempo en el cual se presenta la nueva llegada a la cola
 de listos de una cola de prioridad */
 int get_next_arrival(priority_queue *, int);
 
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
         strcpy(linea, "");
         fgets(linea, 80, fd);
 
-        //printf("Linea leida: %s", linea);
+        // printf("Linea leida: %s", linea);
 
         if (strlen(linea) <= 1)
         {
@@ -216,19 +216,19 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        //Convertir en minusculas
+        // Convertir en minusculas
         lcase(linea);
 
         // Partir la linea en tokens
         t = split(linea, 0);
 
-        //Ignora las lineas que no contienen tokens
+        // Ignora las lineas que no contienen tokens
         if (t->count == 0)
         {
             continue;
         }
 
-        //Procesar cada linea, aux apunta al arreglo de tokens
+        // Procesar cada linea, aux apunta al arreglo de tokens
         aux = t->parts;
 
         if (equals(aux[0], "exit"))
@@ -245,11 +245,11 @@ int main(int argc, char *argv[])
         }
         else if (equals(aux[0], "define") && t->count >= 3)
         {
-            //Comando define queues n
+            // Comando define queues n
             if (equals(aux[1], "queues"))
             {
                 nqueues = atoi(aux[2]);
-                //Crear el arreglo de colas de prioridad y a lista de procesos
+                // Crear el arreglo de colas de prioridad y a lista de procesos
                 if (nqueues > 0)
                 {
                     queues = create_queues(nqueues);
@@ -260,12 +260,12 @@ int main(int argc, char *argv[])
             }
             else if (equals(aux[1], "scheduling") && t->count >= 4)
             {
-                //Comando scheduling n ESTATEGIA
-                //n = 1 ... # de colas de prioridad
+                // Comando scheduling n ESTATEGIA
+                // n = 1 ... # de colas de prioridad
 
-                //i = n - 1, los arreglos comienzan en cero
+                // i = n - 1, los arreglos comienzan en cero
                 i = atoi(aux[2]) - 1;
-                //printf("Defining scheduling to queue %d\n", i);
+                // printf("Defining scheduling to queue %d\n", i);
                 if (i < 0 || i >= nqueues)
                 {
                     continue;
@@ -285,10 +285,10 @@ int main(int argc, char *argv[])
             }
             else if (equals(aux[1], "quantum") && t->count >= 4)
             {
-                //Comando scheduling n QUANTUM
-                //n = 1 ... # de colas de prioridad
+                // Comando scheduling n QUANTUM
+                // n = 1 ... # de colas de prioridad
                 i = atoi(aux[2]) - 1;
-                //printf("Defining quantum to queue %d\n", i);
+                // printf("Defining quantum to queue %d\n", i);
                 quantum = atoi(aux[3]);
                 if (i < 0 || i >= nqueues)
                 {
@@ -299,8 +299,8 @@ int main(int argc, char *argv[])
         }
         else if (equals(aux[0], "process") && t->count >= 3)
         {
-            //Comando process FILENAME PRIORITY
-            //printf("process %s\n", aux[1]);
+            // Comando process FILENAME PRIORITY
+            // printf("process %s\n", aux[1]);
             p = create_process(aux[1]);
 
             if (p != 0)
@@ -313,22 +313,22 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 p->priority = i - 1;
-                //printf("Inserting process %s\n", p->name);
-                //Insertar el proceso en la lista general de procesos
+                // printf("Inserting process %s\n", p->name);
+                // Insertar el proceso en la lista general de procesos
                 insert_ordered(processes, p, compare_arrival);
             }
-            //print_process(p);
+            // print_process(p);
         }
         else if (equals(aux[0], "start"))
         {
-            //Comando start
-            //Comenzar la simulacion!!!
+            // Comando start
+            // Comenzar la simulacion!!!
 
             schedule(processes, queues, nqueues);
 
             simulated = 1;
 
-            //system("pause");
+            // system("pause");
         }
     }
 }
@@ -343,7 +343,7 @@ priority_queue *create_queues(int n)
 
     for (i = 0; i < n; i++)
     {
-        ret[i].strategy = RR; //Por defecto RR
+        ret[i].strategy = RR; // Por defecto RR
         ret[i].quantum = 0;
         ret[i].arrival = create_list();
         ret[i].ready = create_list();
@@ -399,7 +399,7 @@ int compare_arrival(const void *a, const void *b)
     p1 = (process *)a;
     p2 = (process *)b;
 
-    //printf("Comparing %s to %s : %d %d\n", p1->name, p2->name, p1->arrival_time, p2->arrival_time);
+    // printf("Comparing %s to %s : %d %d\n", p1->name, p2->name, p1->arrival_time, p2->arrival_time);
 
     return p2->arrival_time - p1->arrival_time;
 }
@@ -477,11 +477,11 @@ process *create_process(char *filename)
             ins->type = CPU;
             ins->time = atoi(aux[1]);
             push_back(ret->instructions, ins);
-            //printf("cpu %s\n", aux[1]);
+            // printf("cpu %s\n", aux[1]);
         }
         else if (equals(aux[0], "end"))
         {
-            //printf("End!\n");
+            // printf("End!\n");
             break;
         }
     }
@@ -492,7 +492,7 @@ process *create_process(char *filename)
     // printf("Process %s execution time: %d\n", ret->name, ret->execution_time);
 
     fclose(fd);
-    //print_process(ret);
+    // print_process(ret);
 
     return ret;
 }
@@ -527,10 +527,10 @@ void merge_instructions(process *p)
     {
         ins = (instruction *)aux->data;
         ins_next = (instruction *)next(aux)->data;
-        //printf("\tComparando %d %d con %d %d\n", ins->type, ins->time, ins_next->type, ins_next->time);
+        // printf("\tComparando %d %d con %d %d\n", ins->type, ins->time, ins_next->type, ins_next->time);
         if (ins->type == ins_next->type)
-        { //Nodos iguales, fusionar y restar 1 al conteo de nodos
-            //printf("\t\t%d %d y %d %d son iguales\n", ins->type, ins->time, ins_next->type, ins_next->time);
+        { // Nodos iguales, fusionar y restar 1 al conteo de nodos
+            // printf("\t\t%d %d y %d %d son iguales\n", ins->type, ins->time, ins_next->type, ins_next->time);
             ins->time = ins->time + ins_next->time;
             aux->next = next(aux)->next;
             if (aux->next != 0)
@@ -580,7 +580,7 @@ void print_process(process *p)
     instruction *ins;
     printf("(%s arrival:%d finished:%d  execution time:%d waiting:%d ",
            p->name, p->arrival_time, p->finished_time, p->execution_time, p->waiting_time);
-    //UNDEFINED, LOADED, READY, RUNNING, FINISHED
+    // UNDEFINED, LOADED, READY, RUNNING, FINISHED
     printf("%s ", (p->status == READY) ? "ready" : (p->status == LOADED) ? "loaded"
                                                : (p->status == FINISHED) ? "finished"
                                                                          : "unknown");
@@ -620,7 +620,7 @@ void prepare(list *processes, priority_queue *queues, int nqueues)
 
     for (i = 0; i < nqueues; i++)
     {
-        //printf("Clearing queue %d\n", i);
+        // printf("Clearing queue %d\n", i);
         if (queues[i].ready != 0)
         {
             clear_list(queues[i].ready);
@@ -665,12 +665,12 @@ int process_arrival(int now, priority_queue *queues, int nqueues)
     int finished;
     int total;
 
-    //printf("Process arrival at %d\n", now);
+    // printf("Process arrival at %d\n", now);
 
     total = 0;
     for (i = 0; i < nqueues; i++)
     {
-        //printf("Queue %d\n", i);
+        // printf("Queue %d\n", i);
         finished = 0;
 
         while (finished == 0)
@@ -680,18 +680,28 @@ int process_arrival(int now, priority_queue *queues, int nqueues)
             {
                 finished = 1;
                 continue;
-            } //Cola vacia, pasar a la siguiente cola
+            } // Cola vacia, pasar a la siguiente cola
             if (p->status == LOADED)
-            { //Es un proceso nuevo?
+            { // Es un proceso nuevo?
                 if (p->arrival_time <= now)
-                { //Es hora de llevarlo a ready?
+                { // Es hora de llevarlo a ready?
                     p->status = READY;
                     p->waiting_time = now - p->arrival_time;
-                    push_back(queues[i].ready, p);
+                    // FIFO: Non pre-emptive, RR: pre-emptive
+                    if (queues[i].strategy == FIFO || queues[i].strategy == RR)
+                    {
+                        push_back(queues[i].ready, p);
+                    }
+                    // SJF: Non pre-emptive, SRT: pre-emptive
+                    else if (queues[i].strategy == SJF || queues[i].strategy == SRT){
+                        insert_ordered(queues[i].ready, p, compare_execution_time);
+                    }
+
+                    // push_back(queues[i].ready, p);
                     pop_front(queues[i].arrival);
                 }
                 else
-                { //Terminar de procesar esta cola
+                { // Terminar de procesar esta cola
                     finished = 1;
                 }
             }
@@ -702,12 +712,12 @@ int process_arrival(int now, priority_queue *queues, int nqueues)
         }
     }
 
-    //Retorna el numero de procesos que se encuetran en estado de
-    //listo en todas las colas de prioridad
+    // Retorna el numero de procesos que se encuetran en estado de
+    // listo en todas las colas de prioridad
     return get_ready_count(queues, nqueues);
 }
 
-/* Retorna el tiempo en el cual se presenta la nueva llegada a la cola 
+/* Retorna el tiempo en el cual se presenta la nueva llegada a la cola
 de listos de una cola de prioridad */
 int get_next_arrival(priority_queue *queues, int nqueues)
 {
@@ -719,8 +729,8 @@ int get_next_arrival(priority_queue *queues, int nqueues)
 
     for (i = 0; i < nqueues; i++)
     {
-        //Revisar el primer proceso en la lista arrival
-        //este tiene el menor tiempo de llegada.
+        // Revisar el primer proceso en la lista arrival
+        // este tiene el menor tiempo de llegada.
         p = front(queues[i].arrival);
         if (p != 0)
         {
@@ -731,7 +741,7 @@ int get_next_arrival(priority_queue *queues, int nqueues)
         }
     }
 
-    //printf("Next arrival : %d\n", ret);
+    // printf("Next arrival : %d\n", ret);
 
     if (ret == INT_MAX)
     {
@@ -764,29 +774,29 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
     int finished;
     int nprocesses;
 
-    //Preparar para una nueva simulacion
-    //Inicializar las colas de prioridad con la informacion de la lista
-    //de procesos leidos
+    // Preparar para una nueva simulacion
+    // Inicializar las colas de prioridad con la informacion de la lista
+    // de procesos leidos
     prepare(processes, queues, nqueues);
 
-    //Numero de procesos que falta por ejecutar
+    // Numero de procesos que falta por ejecutar
     nprocesses = processes->count;
 
-    printf("TODO: Implementar la planificacion!!\n");
+    // printf("TODO: Implementar la planificacion!!\n");
 
-    print_queue(&queues[0]);
+    // print_queue(&queues[0]);
 
     /*
-     while (nprocesses > 0) {    
+     while (nprocesses > 0) {
         // TODO: Implementar la planificaci�n
-         
+
         //Cuando un proceso termina, decrementar nprocesses.
         //El ciclo termina cuando todos los procesos han terminado,
-        //es decir nprocesses = 0 
+        //es decir nprocesses = 0
      }
      */
 
-    //Imprimir la salida del programa
+    // Imprimir la salida del programa
 }
 
 void usage(void)
