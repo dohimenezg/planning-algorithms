@@ -10,17 +10,18 @@
 
 /**
  * Define la estructura de la lista de palabras obtenida como valor de retorno
- * de la función split.
+ * de la funciï¿½n split.
  */
-typedef struct {
-    char * parts[MAX_PARTS];
+typedef struct
+{
+    char *parts[MAX_PARTS];
     int count;
-}split_list;
+} split_list;
 
 /** 
  * Divide una cadena en palabras, usando los delimitadores especificados
  * o los delimitadores por defecto
  */
-split_list * split(char * str, const char * delim);
+split_list *split(char *str, const char *delim);
 
 #endif
