@@ -116,9 +116,13 @@ void print_queue(priority_queue *);
  */
 int get_ready_count(priority_queue *, int);
 
-/*@brief Retorna el tiempo en el cual se presenta la nueva llegada a la cola
+/** @brief Retorna el tiempo en el cual se presenta la nueva llegada a la cola
 de listos de una cola de prioridad */
 int get_next_arrival(priority_queue *, int);
+
+/** @brief Retorna la con con mayor prioridad cuyo proceso en la cola de llegada
+sea igual al especificado*/
+int get_next_arrival_queue(int, priority_queue *, int);
 
 /** @brief Procesa la llegada de procesos en el tiempo especificado */
 int process_arrival(int, priority_queue *, int);
@@ -693,7 +697,8 @@ int process_arrival(int now, priority_queue *queues, int nqueues)
                         push_back(queues[i].ready, p);
                     }
                     // SJF: Non pre-emptive, SRT: pre-emptive
-                    else if (queues[i].strategy == SJF || queues[i].strategy == SRT){
+                    else if (queues[i].strategy == SJF || queues[i].strategy == SRT)
+                    {
                         insert_ordered(queues[i].ready, p, compare_execution_time);
                     }
 
@@ -751,6 +756,27 @@ int get_next_arrival(priority_queue *queues, int nqueues)
     return ret;
 }
 
+/* Retorna la con con mayor prioridad cuyo proceso en la cola de llegada
+sea igual al especificado*/
+int get_next_arrival_queue(int time, priority_queue *queues, int nqueues)
+{
+    int i;
+    process *p;
+
+    for (i = 0; i < nqueues; i++)
+    {
+        p = front(queues[i].arrival);
+        if (p != 0)
+        {
+            if (p->status == LOADED && p->arrival_time == time)
+            {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
 /* Retorna el numero de procesos listos en una cola de prioridad */
 int get_ready_count(priority_queue *queues, int nqueues)
 {
@@ -773,14 +799,27 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
 
     int finished;
     int nprocesses;
-
+    int current_time;
+    int current_queue;
+    process *current_process;
     // Preparar para una nueva simulacion
     // Inicializar las colas de prioridad con la informacion de la lista
     // de procesos leidos
     prepare(processes, queues, nqueues);
 
     // Numero de procesos que falta por ejecutar
+    current_time = get_next_arrival(queues, nqueues);
+    current_queue = get_next_arrival_queue(queues, nqueues, current_time);
+    current_process = 0;
     nprocesses = processes->count;
+
+    // printf("Current_time = %d\nCurrent_queue = %d\nNprocesse = %d", current_time, current_queue, nprocesses);
+
+    while (nprocesses > 0)
+    {
+
+    }
+    
 
     // printf("TODO: Implementar la planificacion!!\n");
 
