@@ -1122,7 +1122,8 @@ void simulation_output(priority_queue *queues, int nqueues, int current_time)
         for (it = head(queues[i].finished); it != 0; it = next(it))
         {
             p = (process *)it->data;
-            printf("%-3d%-10s%-8d%-12d%-10d%-12d%d\n", current_process, p->name, i, p->arrival_time, p->total_time, p->waiting_time, p->finished_time);
+            printf("%-3d%-10s%-8d%-12d%-10d%-12d%d\n", current_process, p->name, i
+                    , p->arrival_time, p->total_time, p->waiting_time, p->finished_time);
             current_process++;
         }
     }
