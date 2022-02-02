@@ -78,6 +78,14 @@ typedef struct
     int time;
 } sequence_item;
 
+/*
+typedef struct
+{
+    int *count;
+    int final_time;
+    list *sequence_item;
+} result;
+*/
 
 /** @brief Auxiliar */
 typedef struct
@@ -95,6 +103,7 @@ typedef struct
     int arrival_time;
     int waiting_time;
     int finished_time;
+    int total_time;
     int execution_time;
     enum status status;
     list *instructions;
@@ -109,6 +118,7 @@ typedef struct
     list *ready;
     list *arrival;
     list *finished;
+    // Buffer?
 } priority_queue;
 
 /** @brief Crea una nueva lista de colas de prioridad
@@ -170,6 +180,20 @@ void schedule(list *, priority_queue *, int);
 
 /** @brief Prepara el entorno para la simulacion. */
 void prepare(list *, priority_queue *, int);
+
+/*
+result *create_result_set();
+
+sequence_item *add_result(result *);
+
+void print_result(priority_queue *, int, result *);
+*/
+
+void simulation_output(priority_queue *, int, int);
+
+const char* get_char_strategy(enum strategy);
+
+double waiting_time_avg(priority_queue *, int);
 
 /** @brief Imprime la ayuda. */
 void usage(void);
@@ -475,6 +499,7 @@ process *create_process(char *filename)
     ret->priority = -1;
     ret->waiting_time = -1;
     ret->finished_time = -1;
+    ret->total_time = 0;
     ret->execution_time = 0;
     ret->status = UNDEFINED;
     ret->instructions = create_list();
@@ -520,6 +545,7 @@ process *create_process(char *filename)
     merge_instructions(ret);
 
     ret->execution_time = calculate_execution_time(ret);
+    ret->total_time = ret->execution_time;
 
     // printf("Process %s execution time: %d\n", ret->name, ret->execution_time);
 
@@ -979,6 +1005,7 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
         print_queue(&queues[i]);
     }
     */
+    simulation_output(queues, nqueues, current_time);
 }
 
 void add_waiting_time(priority_queue *queues, int nqueues, int time)
@@ -1051,4 +1078,92 @@ void usage_en(void)
     printf("         BEGIN t                              : Process arrival time\n");
     printf("         CPU t                                : Execution time instruction. Can be followed by other CPU instructions.\n");
     printf("         END                                  : End of program.\n");
+}
+/*
+result *create_result_set()
+{
+    result *output;
+    output = (result *)malloc(sizeof(result));
+    output->final_time = 0;
+    output->sequence_item = create_list();
+    output->count = &output->sequence_item->count;
+    return output;
+}
+
+sequence_item *add_result(result *output)
+{
+    push_back(output->sequence_item, (sequence_item *)malloc(sizeof(sequence_item)));
+    return (sequence_item *)back(output->sequence_item);)
+}
+
+void print_result(priority_queue *queues, int nqueues, result *output)
+{
+
+}
+*/
+
+void simulation_output(priority_queue *queues, int nqueues, int current_time)
+{
+    node_iterator it;
+    process *p;
+    double avr = waiting_time_avg(queues, nqueues);
+    int i;
+    int current_process;
+    current_process = 0;
+    printf("---------------------------------------------------------------\n");
+    printf("t (Unit of time)\n");
+    printf("Program output!\nNqueues: %d\tTotal time: %dt\tAvr waiting time: %gt\n",
+           nqueues, current_time, avr);
+    printf("\n%-3s%-10s%-8s%-12s%-10s%-12s%s\n", "#", "Process", "Queue", "Arrival", "Ins", "Waiting", "Finished");
+    printf("---------------------------------------------------------------\n");
+
+    for (i = 0; i < nqueues; i++)
+    {
+        for (it = head(queues[i].finished); it != 0; it = next(it))
+        {
+            p = (process *)it->data;
+            printf("%-3d%-10s%-8d%-12d%-10d%-12d%d\n", current_process, p->name, i, p->arrival_time, p->total_time, p->waiting_time, p->finished_time);
+            current_process++;
+        }
+    }
+    for (i = 0; i < nqueues; i++)
+    {
+        printf("Queue %d strategy: %s \tQuantum %d \n", i, get_char_strategy(queues[i].strategy), queues[i].quantum);
+    }
+}
+
+const char* get_char_strategy(enum strategy queue_strategy)
+{
+    switch (queue_strategy)
+    {
+    case FIFO:
+        return "fifo";
+    case RR:
+        return "rr";
+    case SJF:
+        return "sjf";
+    case SRT:
+        return "srt";
+    }
+}
+
+double waiting_time_avg(priority_queue *queues, int nqueues)
+{
+    process *p;
+    node_iterator it;
+    double avg;
+    int nprocesses;
+    avg = 0.0;
+    nprocesses = 0;
+    for (int i = 0; i < nqueues; i++)
+    {
+        for (it = head(queues[i].finished); it != 0; it = next(it))
+        {
+            p = (process *)it->data;
+            avg += p->waiting_time;
+            nprocesses++;
+        }
+    }
+    avg /= (nprocesses * 1.0);
+    return avg;
 }
