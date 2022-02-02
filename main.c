@@ -1,25 +1,29 @@
 /*
- Simulador de planificacion de CPU para un solo procesador.
- Derechos Reservados de Erwin Meza Vega <emezav@gmail.com>.
+Simulador de planificacion de CPU para un solo procesador.
+Derechos Reservados de Erwin Meza Vega <emezav@gmail.com>.
 
- Presentado por:
+Presentado por:
 
- estudiante1 codigo correo
- estudiante1 codigo correo
+David Jimenez djimenezg@unicauca.edu.co
+Daniel Pastas pdaniel@unicauca.edu.co
 
- IMPORTANTE
- Este código se proporciona como una guía general para implementar
- el simulador de planificación. El estudiante deberá verificar su
- funcionamiento y adaptarlo a las necesidades del problema a solucionar.
+IMPORTANTE
+Este código se proporciona como una guía general para implementar
+el simulador de planificación. El estudiante deberá verificar su
+funcionamiento y adaptarlo a las necesidades del problema a solucionar.
 
- El profesor no se hace responsable por las omisiones, los errores o las
- imprecisiones que se puedan encontrar en este código y los archivos relacionados.
+El profesor no se hace responsable por las omisiones, los errores o las
+imprecisiones que se puedan encontrar en este código y los archivos relacionados.
 
- USO:
-
- ./nombre_ejecutable archivo_configuracion
- ./nombre_ejecutable < archivo_configuracion
-
+USO:
+Dentro del proyecto hay una archivo makefile, hacer uso de este mismo.
+Para compilar el proyecto se ingresa en la consola
+- make
+Para limpiar la solucion
+- make clean
+Para correr los casos de prueba ver el archivo makefile y ejecutar el deseado.
+Un ejemplo seria
+- make fifo
 */
 
 #include <stdio.h>
@@ -87,13 +91,18 @@ typedef struct
 } result;
 */
 
-/** @brief Auxiliar */
+/*
+@brief Auxiliar
 typedef struct
 {
     char name[80];
     int start;
     int time;
 } draw_helper;
+TODO: Repara, poco viable ya que se salta lo del inicio hasta el actual
+POSIBLE SOLUCION: Hacer lineas en blanco o negro todo el tiempo, pero
+                  Usando otra implemetacion mas comoda
+*/
 
 /** @brief Definicion de un proceso */
 typedef struct
@@ -985,6 +994,8 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
                 current_process->finished_time = current_time;
                 current_process->execution_time = 0;
                 nprocesses--;
+                // push_back(queues[current_queue].finished, current_process);
+                // TODO: Comparar para tener algo de orden el la salida del programa
                 insert_ordered(queues[current_queue].finished, current_process, compare_name);
                 current_process = 0;
             }
