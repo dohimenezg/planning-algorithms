@@ -67,6 +67,12 @@ enum type
     CPU
 };
 
+enum line_type
+{
+    VISIBLE,
+    INVISIBLE
+};
+
 /** @brief Instruccion dentro de un programa */
 typedef struct
 {
@@ -95,14 +101,24 @@ typedef struct
 @brief Auxiliar
 typedef struct
 {
-    char name[80];
+    
+    char name[80]; // int nqueue;
     int start;
     int time;
+    // Deprecated
 } draw_helper;
+
 TODO: Repara, poco viable ya que se salta lo del inicio hasta el actual
 POSIBLE SOLUCION: Hacer lineas en blanco o negro todo el tiempo, pero
                   Usando otra implemetacion mas comoda
 */
+
+typedef struct
+{
+    int begin;
+    int end;
+    enum line_type l_type;
+} draw_line;
 
 /** @brief Definicion de un proceso */
 typedef struct
@@ -116,6 +132,7 @@ typedef struct
     int execution_time;
     enum status status;
     list *instructions;
+    list *draw_lines;
     node_iterator thread;
 } process;
 
@@ -190,7 +207,12 @@ void schedule(list *, priority_queue *, int);
 /** @brief Prepara el entorno para la simulacion. */
 void prepare(list *, priority_queue *, int);
 
+void add_draw_line(const void *, int, int);
+
 /*
+
+deprecated, overkill para este proyecto
+
 result *create_result_set();
 
 sequence_item *add_result(result *);
@@ -200,9 +222,17 @@ void print_result(priority_queue *, int, result *);
 
 void simulation_output(priority_queue *, int, int);
 
-const char* get_char_strategy(enum strategy);
+const char *get_char_strategy(enum strategy);
 
 double waiting_time_avg(priority_queue *, int);
+
+void add_draw_line(const void *, int, int);
+
+void print_queue_draw_lines(priority_queue *, int);
+
+void print_draw_lines_process(process *);
+
+const char *get_char_line_type(enum line_type);
 
 /** @brief Imprime la ayuda. */
 void usage(void);
@@ -472,12 +502,16 @@ int compare_execution_time(const void *a, const void *b)
 
 int compare_name(const void *a, const void *b)
 {
+
     process *p1;
     process *p2;
 
     p1 = (process *)a;
     p2 = (process *)b;
 
+    // Sorpresivamente funciona comparando los ASCII
+
+    // return strcmp(p2->name, p1->name);
     return p2->name - p1->name;
 }
 
@@ -512,6 +546,7 @@ process *create_process(char *filename)
     ret->execution_time = 0;
     ret->status = UNDEFINED;
     ret->instructions = create_list();
+    ret->draw_lines = create_list();
     ret->thread = 0;
 
     while (!feof(fd))
@@ -553,7 +588,9 @@ process *create_process(char *filename)
     }
     merge_instructions(ret);
 
+    // Execution time se irá decrementando
     ret->execution_time = calculate_execution_time(ret);
+    // Total time conserva su valor para hacer la impresion
     ret->total_time = ret->execution_time;
 
     // printf("Process %s execution time: %d\n", ret->name, ret->execution_time);
@@ -984,18 +1021,21 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
             {
                 add_waiting_time(queues, nqueues, quantum);
                 current_process->execution_time -= quantum;
+                add_draw_line(current_process, current_time, quantum);
                 current_time += quantum;
             }
             else
             {
                 current_process->status = FINISHED;
                 add_waiting_time(queues, nqueues, current_process->execution_time);
+                add_draw_line(current_process, current_time, current_process->execution_time);
                 current_time += current_process->execution_time;
                 current_process->finished_time = current_time;
                 current_process->execution_time = 0;
                 nprocesses--;
                 // push_back(queues[current_queue].finished, current_process);
-                // TODO: Comparar para tener algo de orden el la salida del programa
+                // TODO: Buscar parametro para tener algo de orden el la salida del programa
+                // POSIBLE SOLUCION: Comparar por nombres
                 insert_ordered(queues[current_queue].finished, current_process, compare_name);
                 current_process = 0;
             }
@@ -1017,6 +1057,7 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
     }
     */
     simulation_output(queues, nqueues, current_time);
+    print_queue_draw_lines(queues, nqueues);
 }
 
 void add_waiting_time(priority_queue *queues, int nqueues, int time)
@@ -1094,22 +1135,19 @@ void usage_en(void)
 result *create_result_set()
 {
     result *output;
-    output = (result *)malloc(sizeof(result));
-    output->final_time = 0;
-    output->sequence_item = create_list();
-    output->count = &output->sequence_item->count;
+    TODO crear usando malloc
     return output;
 }
 
 sequence_item *add_result(result *output)
 {
-    push_back(output->sequence_item, (sequence_item *)malloc(sizeof(sequence_item)));
-    return (sequence_item *)back(output->sequence_item);)
+    TODO hacer push_back de la salida (usar Malloc)
+    return (sequnece_item *)
 }
 
 void print_result(priority_queue *queues, int nqueues, result *output)
 {
-
+    TODO ver viabilidad de usar esto para el dibujado
 }
 */
 
@@ -1133,8 +1171,7 @@ void simulation_output(priority_queue *queues, int nqueues, int current_time)
         for (it = head(queues[i].finished); it != 0; it = next(it))
         {
             p = (process *)it->data;
-            printf("%-3d%-10s%-8d%-12d%-10d%-12d%d\n", current_process, p->name, i
-                    , p->arrival_time, p->total_time, p->waiting_time, p->finished_time);
+            printf("%-3d%-10s%-8d%-12d%-10d%-12d%d\n", current_process, p->name, i, p->arrival_time, p->total_time, p->waiting_time, p->finished_time);
             current_process++;
         }
     }
@@ -1144,7 +1181,7 @@ void simulation_output(priority_queue *queues, int nqueues, int current_time)
     }
 }
 
-const char* get_char_strategy(enum strategy queue_strategy)
+const char *get_char_strategy(enum strategy queue_strategy)
 {
     switch (queue_strategy)
     {
@@ -1178,4 +1215,96 @@ double waiting_time_avg(priority_queue *queues, int nqueues)
     }
     avg /= (nprocesses * 1.0);
     return avg;
+}
+
+const char *get_char_line_type(enum line_type l_type)
+{
+    switch (l_type)
+    {
+    case VISIBLE:
+        return "visible";
+    case INVISIBLE:
+        return "invisible";
+    }
+}
+
+void add_draw_line(const void *a, int current_time, int quantum)
+{
+    process *p;
+    p = (process *)a;
+    draw_line *line;
+    draw_line *line_helper;
+    line = (draw_line *)malloc(sizeof(draw_line));
+    line_helper = (draw_line *)malloc(sizeof(draw_line));
+    if (p->draw_lines->count == 0)
+    {
+        line_helper->begin = 0;
+        line_helper->end = current_time;
+        line_helper->l_type = INVISIBLE;
+    }
+    else
+    {
+        draw_line *prev_line;
+        prev_line = (draw_line *)malloc(sizeof(draw_line));
+        prev_line = (draw_line *)p->draw_lines->tail->data;
+        line_helper->begin = prev_line->end;
+        line_helper->end = current_time;
+        line_helper->l_type = INVISIBLE;
+    }
+    if (line_helper->begin != line_helper->end)
+    {
+        push_back(p->draw_lines, line_helper);
+    }
+    line->begin = current_time;
+    line->end = current_time + quantum;
+    line->l_type = VISIBLE;
+    push_back(p->draw_lines, line);
+}
+
+void print_queue_draw_lines(priority_queue *queues, int nqueues)
+{
+    int i;
+    node_iterator ptr;
+
+    printf("\nDRAW LINES\n");
+    for (i = 0; i < nqueues; i++)
+    {
+        for (ptr = head(queues[i].finished); ptr != 0; ptr = next(ptr))
+        {
+            print_draw_lines_process((process *)ptr->data);
+        }
+    }
+}
+
+void print_draw_lines_process(process *p)
+{
+    if (p == 0)
+    {
+        return;
+    }
+    node_iterator ptr;
+    draw_line *dwl;
+    for (ptr = head(p->draw_lines); ptr != 0; ptr = next(ptr))
+    {
+        dwl = (draw_line *)ptr->data;
+        printf("Linea %s: (%d, %d) tipo: %s\n", p->name, dwl->begin,
+               dwl->end, get_char_line_type(dwl->l_type));
+    }
+}
+
+FILE *create_gnuplot_file()
+{
+    FILE *f = fopen("gnuplt.plt", "w");
+    if (f == NULL)
+    {
+        fprintf(stderr, "Error!");
+        return 0;
+    }
+    return f;
+}
+
+void plot_gnuplot_from_file(priority_queue *queues, int nqueues)
+{
+    int i;
+    node_iterator ptr;
 }
