@@ -234,6 +234,18 @@ void print_draw_lines_process(process *);
 
 const char *get_char_line_type(enum line_type);
 
+void plot_gnuplot_from_file(FILE *, priority_queue *, int, int);
+
+const char *get_gnuplot_ytics(priority_queue *, int);
+
+void insert_diferent(list *, process *);
+
+FILE *create_gnuplot_file();
+
+const char *get_style(enum line_type);
+
+void plot_draw_lines_queue(FILE *, process *, int, int *);
+
 /** @brief Imprime la ayuda. */
 void usage(void);
 void usage_en(void);
@@ -1058,6 +1070,8 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
     */
     simulation_output(queues, nqueues, current_time);
     print_queue_draw_lines(queues, nqueues);
+    plot_gnuplot_from_file(create_gnuplot_file(), queues, nqueues, current_time);
+    // printf("%s", get_gnuplot_ytics(queues, nqueues));
 }
 
 void add_waiting_time(priority_queue *queues, int nqueues, int time)
@@ -1294,7 +1308,7 @@ void print_draw_lines_process(process *p)
 
 FILE *create_gnuplot_file()
 {
-    FILE *f = fopen("gnuplt.plt", "w");
+    FILE *f = fopen("plot.plt", "w");
     if (f == NULL)
     {
         fprintf(stderr, "Error!");
@@ -1303,8 +1317,172 @@ FILE *create_gnuplot_file()
     return f;
 }
 
-void plot_gnuplot_from_file(priority_queue *queues, int nqueues)
+void plot_gnuplot_from_file(FILE *f, priority_queue *queues, int nqueues, int current_time)
 {
     int i;
     node_iterator ptr;
+    list *ytics = create_list();
+
+    for (i = 0; i < nqueues; i++)
+    {
+        for (ptr = head(queues[i].finished); ptr != 0; ptr = next(ptr))
+        {
+            insert_diferent(ytics, (process *)ptr->data);
+        }
+    }
+    i = 1;
+    char *output;
+    char *char_n;
+    output = (char *)malloc(sizeof(char) * ytics->count);
+    // strcat char * segmentation fault without strcpy
+    strcpy(output, "set ytics(");
+    for (ptr = head(ytics); ptr != 0; ptr = next(ptr))
+    {
+        char_n = (char *)malloc(sizeof(char) * ytics->count);
+        //printf("{%s}", ptr->data);
+        strcat(output, "\'");
+        strcat(output, ptr->data);
+        strcat(output, "\' ");
+        snprintf(char_n, strlen(output), "%d", i);
+        strcat(output, char_n);
+        //strcat(output, i + '0'); MAYORES DE 9 PAILA
+        strcat(output, (next(ptr) == 0) ? ")\n" : ", ");
+        i++;
+    }
+
+    char *yrange;
+    yrange = (char *)malloc(sizeof(char) * ytics->count);
+    char *char_n3;
+    char_n3 = (char *)malloc(sizeof(char) * ytics->count);
+    snprintf(char_n3, strlen(output), "%d", i + 1);
+    strcpy(yrange, "set yrange [0:");
+    strcat(yrange, char_n3);
+    strcat(yrange, "]\n");
+
+    char *xrange;
+    xrange = (char *)malloc(sizeof(char) * ytics->count);
+    char *char_n2;
+    char_n2 = (char *)malloc(sizeof(char) * ytics->count);
+    snprintf(char_n2, strlen(output), "%d", current_time + 5);
+    strcpy(xrange, "set xrange [0:");
+    strcat(xrange, char_n2);
+    strcat(xrange, "]\n");
+
+    fprintf(f, "set term pngcairo dashed size 1024,768\n");
+    fprintf(f, "set output 'plot.png'\n");
+    fprintf(f, "set style fill solid\n");
+    fprintf(f, xrange);
+    fprintf(f, "set xtics 5\n");
+    fprintf(f, "set title 'Planificacion'\n");
+    fprintf(f, get_gnuplot_ytics(queues, nqueues));
+    fprintf(f, "unset key\n");
+    fprintf(f, "set style line 1 lt 1 lw 2 lc rgb '#00ff00'\n");
+    fprintf(f, "set style line 2 lt 1 lw 2 lc rgb '#ff0000'\n");
+    fprintf(f, "set style line 3 lt 1 lw 1 lc rgb '#202020'\n");
+    fprintf(f, "set style arrow 1 heads size screen 0.008,90 ls 1\n");
+    fprintf(f, "set style arrow 2 heads size screen 0.008,90 ls 2\n");
+    fprintf(f, "set style arrow 3 heads size screen 0.008,100 ls 3\n");
+    fprintf(f, yrange);
+
+    int j;
+    j = 1;
+    int *k;
+    k = (int *)malloc(sizeof(int));
+    *k = 1;
+    for (i = 0; i < nqueues; i++)
+    {
+        for (ptr = head(queues[i].finished); ptr != 0; ptr = next(ptr))
+        {
+            plot_draw_lines_queue(f, (process *)ptr->data, j, k);
+            j += 1;
+        }
+    }
+    fprintf(f, "plot NaN\n");
+
+    fclose(f);
+    //Generar el grafico PNG
+    system("gnuplot plot.plt");
+}
+
+void plot_draw_lines_queue(FILE *f, process *p, int i, int *k)
+{
+    node_iterator ptr;
+    draw_line *dwl;
+    for (ptr = head(p->draw_lines); ptr != 0; ptr = next(ptr))
+    {
+        printf("k: %d \n", *k);
+        dwl = (draw_line *)ptr->data;
+        char *line = (char *)malloc(sizeof(char) * 100);
+        snprintf(line, 100, "set arrow %d from %d,%d to %d,%d as %s\n",
+                 *k, dwl->begin, i, dwl->end, i, get_style(dwl->l_type));
+        printf("\n%s\n", line);
+        fprintf(f, line);
+        //fprintf(fp, "set arrow 1 from 0,1 to 3,1 as 3\n");
+        *k += 1;
+    }
+}
+
+const char *get_style(enum line_type l_type)
+{
+    switch (l_type)
+    {
+    case VISIBLE:
+        //printf("\n1\n");
+        return "1";
+    case INVISIBLE:
+        //printf("\n2\n");
+        return "2";
+    }
+}
+
+const char *get_gnuplot_ytics(priority_queue *queues, int nqueues)
+{
+    int i;
+    node_iterator ptr;
+    list *ytics = create_list();
+
+    for (i = 0; i < nqueues; i++)
+    {
+        for (ptr = head(queues[i].finished); ptr != 0; ptr = next(ptr))
+        {
+            insert_diferent(ytics, (process *)ptr->data);
+        }
+    }
+    i = 1;
+    char *output;
+    char *char_n;
+    output = (char *)malloc(sizeof(char) * ytics->count);
+    // strcat char * segmentation fault without strcpy
+    strcpy(output, "set ytics(");
+    for (ptr = head(ytics); ptr != 0; ptr = next(ptr))
+    {
+        char_n = (char *)malloc(sizeof(char) * ytics->count);
+        //printf("{%s}", ptr->data);
+        strcat(output, "\'");
+        strcat(output, ptr->data);
+        strcat(output, "\' ");
+        snprintf(char_n, strlen(output), "%d", i);
+        strcat(output, char_n);
+        //strcat(output, i + '0'); MAYORES DE 9 PAILA
+        strcat(output, (next(ptr) == 0) ? ")\n" : ", ");
+        i++;
+    }
+    //printf("%s\n", output);
+    return output;
+}
+
+void insert_diferent(list *ytics, process *p)
+{
+    node_iterator ptr;
+    for (ptr = head(ytics); ptr != 0; ptr = next(ptr))
+    {
+        if (ptr->data == p->name)
+        {
+            return;
+        }
+        // printf("Name 1: %s\n", p->name);
+    }
+    // printf("Name 2: %s\n", p->name);
+    push_back(ytics, p->name);
+    // printf("Cantidad: %d\n", ytics->count);
 }
