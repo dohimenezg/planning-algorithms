@@ -78,6 +78,15 @@ typedef struct
     int time;
 } sequence_item;
 
+
+/** @brief Auxiliar */
+typedef struct
+{
+    char name[80];
+    int start;
+    int time;
+} draw_helper;
+
 /** @brief Definicion de un proceso */
 typedef struct
 {
@@ -124,6 +133,12 @@ int get_next_arrival(priority_queue *, int);
 sea igual al especificado*/
 int get_next_arrival_queue(int, priority_queue *, int);
 
+process *get_next_process(int *, priority_queue *, int, int);
+
+process *get_next_queue_arrival(priority_queue *, int, int);
+
+void add_waiting_time(priority_queue *, int, int);
+
 /** @brief Procesa la llegada de procesos en el tiempo especificado */
 int process_arrival(int, priority_queue *, int);
 
@@ -147,6 +162,8 @@ int compare_arrival(const void *, const void *);
 
 /** @brief Funcion que compara dos tiempos de ejecucion */
 int compare_execution_time(const void *, const void *);
+
+int compare_name(const void *, const void *);
 
 /** @brief Funcion que permite planificar los procesos*/
 void schedule(list *, priority_queue *, int);
@@ -420,6 +437,17 @@ int compare_execution_time(const void *a, const void *b)
     return p2->execution_time - p1->execution_time;
 }
 
+int compare_name(const void *a, const void *b)
+{
+    process *p1;
+    process *p2;
+
+    p1 = (process *)a;
+    p2 = (process *)b;
+
+    return p2->name - p1->name;
+}
+
 /* Rutina para leer la informacion de un proceso */
 process *create_process(char *filename)
 {
@@ -595,6 +623,15 @@ void print_process(process *p)
         ins = (instruction *)ptr->data;
         printf("%s %d ", (ins->type == CPU) ? "CPU" : "LOCK", ins->time);
     }
+    /*
+    printf(" ] [ ");
+
+    for (ptr = head(p->instructions); ptr != 0; ptr = next(ptr))
+    {
+        ins = (instruction *)ptr->data;
+        printf("%s %d ", (ins->type == CPU) ? "CPU" : "LOCK", ins->remaining);
+    }
+    */
     printf("]) ");
 }
 /* Rutina para convertir una cadena en minusculas */
@@ -777,6 +814,52 @@ int get_next_arrival_queue(int time, priority_queue *queues, int nqueues)
     return -1;
 }
 
+process *get_next_process(int *current_time, priority_queue *queues, int nqueues, int current_queue)
+{
+    process *p = 0;
+    while (queues[current_queue].ready->count == 0)
+    {
+        if (current_queue > (nqueues - 1))
+        {
+            current_queue = 0;
+            *current_time = get_next_arrival(queues, nqueues);
+            if (*current_time == -1)
+            {
+                exit(EXIT_FAILURE);
+            }
+            process_arrival(*current_time, queues, nqueues);
+        }
+        current_queue++;
+    }
+    p = front(queues[current_queue].ready);
+    return p;
+}
+
+process *get_next_queue_arrival(priority_queue *queues, int max_arrival, int execution_time)
+{
+    int current_execution_time;
+    process *p;
+    process *p_helper;
+    node_iterator it;
+
+    current_execution_time = execution_time;
+    p_helper = 0;
+
+    for (it = head(queues->arrival); it != 0; it = next(it))
+    {
+        p = (process *)it->data;
+        if (p != 0)
+        {
+            if (p->arrival_time < max_arrival && p->execution_time < current_execution_time)
+            {
+                current_execution_time = p->execution_time;
+                p_helper = p;
+            }
+        }
+    }
+    return p_helper;
+}
+
 /* Retorna el numero de procesos listos en una cola de prioridad */
 int get_ready_count(priority_queue *queues, int nqueues)
 {
@@ -801,7 +884,11 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
     int nprocesses;
     int current_time;
     int current_queue;
+    int next_queue;
     process *current_process;
+    int quantum;
+    int quantum_helper;
+
     // Preparar para una nueva simulacion
     // Inicializar las colas de prioridad con la informacion de la lista
     // de procesos leidos
@@ -809,33 +896,105 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
 
     // Numero de procesos que falta por ejecutar
     current_time = get_next_arrival(queues, nqueues);
-    current_queue = get_next_arrival_queue(queues, nqueues, current_time);
+    current_queue = 0;
+    next_queue = 0;
     current_process = 0;
+    quantum = 0;
     nprocesses = processes->count;
-
-    // printf("Current_time = %d\nCurrent_queue = %d\nNprocesse = %d", current_time, current_queue, nprocesses);
 
     while (nprocesses > 0)
     {
-
+        process_arrival(current_time, queues, nqueues);
+        if (current_process != 0 && current_process->status == RUNNING)
+        {
+            current_process->status = READY;
+            if (queues[current_queue].strategy == FIFO || queues[current_queue].strategy == SJF)
+            {
+                push_front(queues[current_queue].ready, current_process);
+            }
+            else if (queues[current_queue].strategy == RR)
+            {
+                push_back(queues[current_queue].ready, current_process);
+            }
+            else if (queues[current_queue].strategy == SRT)
+            {
+                insert_ordered(queues[current_queue].ready, current_process, compare_execution_time);
+            }
+        }
+        current_queue = next_queue;
+        current_process = get_next_process(&current_time, queues, nqueues, current_queue);
+        current_queue = current_process->priority;
+        quantum = queues[current_queue].quantum;
+        if (queues[current_queue].strategy == SRT && quantum_helper > 0)
+        {
+            quantum = quantum_helper;
+        }
+        if (current_process != 0)
+        {
+            pop_front(queues[current_queue].ready);
+            current_process->status = RUNNING;
+            if (queues[current_queue].strategy == SRT)
+            {
+                process *process_helper = get_next_queue_arrival(&queues[current_queue],
+                                                                 current_time + current_process->execution_time,
+                                                                 current_process->execution_time);
+                if (process_helper != 0)
+                {
+                    quantum_helper = quantum;
+                    quantum = process_helper->arrival_time - current_time;
+                }
+                quantum_helper -= quantum;
+            }
+            if (quantum < current_process->execution_time)
+            {
+                add_waiting_time(queues, nqueues, quantum);
+                current_process->execution_time -= quantum;
+                current_time += quantum;
+            }
+            else
+            {
+                current_process->status = FINISHED;
+                add_waiting_time(queues, nqueues, current_process->execution_time);
+                current_time += current_process->execution_time;
+                current_process->finished_time = current_time;
+                current_process->execution_time = 0;
+                nprocesses--;
+                insert_ordered(queues[current_queue].finished, current_process, compare_name);
+                current_process = 0;
+            }
+            if (queues[current_queue].strategy != SRT || quantum_helper <= 0)
+            {
+                next_queue = current_queue + 1;
+                if (next_queue > (nqueues - 1))
+                {
+                    next_queue = 0;
+                }
+            }
+        }
     }
-    
-
-    // printf("TODO: Implementar la planificacion!!\n");
-
-    // print_queue(&queues[0]);
-
     /*
-     while (nprocesses > 0) {
-        // TODO: Implementar la planificaci�n
+    printf("\n-----------------------\n");
+    for (int i = 0; i < nqueues; i++)
+    {
+        print_queue(&queues[i]);
+    }
+    */
+}
 
-        //Cuando un proceso termina, decrementar nprocesses.
-        //El ciclo termina cuando todos los procesos han terminado,
-        //es decir nprocesses = 0
-     }
-     */
+void add_waiting_time(priority_queue *queues, int nqueues, int time)
+{
+    int i;
+    process *p;
+    node_iterator it;
 
-    // Imprimir la salida del programa
+    for (i = 0; i < nqueues; i++)
+    {
+        for (it = head(queues[i].ready); it != 0; it = next(it))
+        {
+            p = (process *)it->data;
+            p->waiting_time += time;
+        }
+    }
 }
 
 void usage(void)
