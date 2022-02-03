@@ -20,3 +20,6 @@ rr: all
 
 sjf: all
 	cd test && ./main sjf.txt
+
+fifo2: all
+	cd test && ./main fifo2.txt

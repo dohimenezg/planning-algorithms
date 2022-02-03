@@ -13,19 +13,25 @@ set style arrow 1 heads size screen 0.008,90 ls 1
 set style arrow 2 heads size screen 0.008,90 ls 2
 set style arrow 3 heads size screen 0.008,100 ls 3
 set yrange [0:8]
-set arrow 1 from 0,1 to 12,1 as 2
-set arrow 2 from 12,1 to 17,1 as 1
-set arrow 3 from 17,1 to 19,1 as 1
-set arrow 4 from 0,2 to 3,2 as 1
-set arrow 5 from 0,3 to 27,3 as 2
-set arrow 6 from 27,3 to 32,3 as 1
-set arrow 7 from 32,3 to 37,3 as 1
-set arrow 8 from 37,3 to 40,3 as 1
-set arrow 9 from 0,4 to 19,4 as 2
-set arrow 10 from 19,4 to 24,4 as 1
-set arrow 11 from 24,4 to 27,4 as 1
-set arrow 12 from 0,5 to 7,5 as 2
-set arrow 13 from 7,5 to 12,5 as 1
-set arrow 14 from 0,6 to 3,6 as 2
-set arrow 15 from 3,6 to 7,6 as 1
+set arrow 1 from 0,1 to 5,1 as 1
+set arrow 2 from 5,1 to 9,1 as 2
+set arrow 3 from 9,1 to 11,1 as 1
+set arrow 4 from 0,2 to 15,2 as 2
+set arrow 5 from 15,2 to 18,2 as 1
+set arrow 6 from 0,3 to 22,3 as 2
+set arrow 7 from 22,3 to 27,3 as 1
+set arrow 8 from 27,3 to 31,3 as 2
+set arrow 9 from 31,3 to 36,3 as 1
+set arrow 10 from 36,3 to 37,3 as 2
+set arrow 11 from 37,3 to 40,3 as 1
+set arrow 12 from 0,4 to 5,4 as 2
+set arrow 13 from 5,4 to 9,4 as 1
+set arrow 14 from 9,4 to 27,4 as 2
+set arrow 15 from 27,4 to 31,4 as 1
+set arrow 16 from 0,5 to 11,5 as 2
+set arrow 17 from 11,5 to 15,5 as 1
+set arrow 18 from 15,5 to 36,5 as 2
+set arrow 19 from 36,5 to 37,5 as 1
+set arrow 20 from 2,6 to 18,6 as 2
+set arrow 21 from 18,6 to 22,6 as 1
 plot NaN

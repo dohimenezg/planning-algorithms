@@ -1069,7 +1069,7 @@ void schedule(list *processes, priority_queue *queues, int nqueues)
     }
     */
     simulation_output(queues, nqueues, current_time);
-    print_queue_draw_lines(queues, nqueues);
+    // print_queue_draw_lines(queues, nqueues);
     plot_gnuplot_from_file(create_gnuplot_file(), queues, nqueues, current_time);
     // printf("%s", get_gnuplot_ytics(queues, nqueues));
 }
@@ -1250,9 +1250,11 @@ void add_draw_line(const void *a, int current_time, int quantum)
     draw_line *line_helper;
     line = (draw_line *)malloc(sizeof(draw_line));
     line_helper = (draw_line *)malloc(sizeof(draw_line));
+    line_helper->begin = current_time;
+    line_helper->end = current_time;
     if (p->draw_lines->count == 0)
     {
-        line_helper->begin = 0;
+        line_helper->begin = p->arrival_time;
         line_helper->end = current_time;
         line_helper->l_type = INVISIBLE;
     }
@@ -1410,12 +1412,12 @@ void plot_draw_lines_queue(FILE *f, process *p, int i, int *k)
     draw_line *dwl;
     for (ptr = head(p->draw_lines); ptr != 0; ptr = next(ptr))
     {
-        printf("k: %d \n", *k);
+        // printf("k: %d \n", *k);
         dwl = (draw_line *)ptr->data;
         char *line = (char *)malloc(sizeof(char) * 100);
         snprintf(line, 100, "set arrow %d from %d,%d to %d,%d as %s\n",
                  *k, dwl->begin, i, dwl->end, i, get_style(dwl->l_type));
-        printf("\n%s\n", line);
+        // printf("\n%s\n", line);
         fprintf(f, line);
         //fprintf(fp, "set arrow 1 from 0,1 to 3,1 as 3\n");
         *k += 1;

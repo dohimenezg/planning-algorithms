@@ -2,6 +2,6 @@
 #           cpu TIME
 #         end
 
-begin 0
+begin 2
 cpu 4
 end
